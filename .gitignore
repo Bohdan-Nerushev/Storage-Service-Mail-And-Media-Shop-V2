@@ -10,6 +10,10 @@ target/
 *.ipr
 *.iws
 
+.vscode/
+
+.env
+
 *.class
 *.log
 *.war
@@ -21,3 +25,6 @@ HELP.md
 .settings/
 
 .DS_Store
+
+
+storage/

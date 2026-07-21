@@ -1,0 +1,19 @@
+minio:
+  url: http://localhost:9000
+  access-key: ${MINIO_ROOT_USER:admin}
+  secret-key: ${MINIO_ROOT_PASSWORD:StrongPassword123}
+  bucket-name: user-images
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/storage
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
