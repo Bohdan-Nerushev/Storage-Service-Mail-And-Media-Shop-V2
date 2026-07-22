@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -65,6 +66,11 @@ public class FileStorageService {
         minioService.delete(metadata.getObjectKey());
         repository.delete(metadata);
     }
+
+    public @NotNull List<FileMetadata> listFiles() {
+        return repository.findAll();
+    }
 }
+
 
 

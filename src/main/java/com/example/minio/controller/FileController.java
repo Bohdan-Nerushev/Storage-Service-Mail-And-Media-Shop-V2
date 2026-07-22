@@ -26,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
-
 import java.io.InputStream;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -157,6 +157,33 @@ public class FileController {
         this.storageService.deleteFile(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping
+    @Operation(
+            summary = "List all files",
+            description = "Retrieves metadata list of all uploaded files stored in the database",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Files list retrieved successfully",
+                            content = @Content(
+                                    schema = @Schema(
+                                            implementation = FileMetadata.class
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error occurred",
+                            content = @Content
+                    )
+            }
+    )
+    public @NotNull List<FileMetadata> list() {
+        log.info("[CorrelationId: {}] Listing all files", MDC.get("correlationId"));
+        return this.storageService.listFiles();
+    }
 }
+
 
 
