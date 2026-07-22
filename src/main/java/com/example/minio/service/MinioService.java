@@ -13,6 +13,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.Http.Method;
+import java.util.concurrent.TimeUnit;
+
 import java.io.InputStream;
 
 @Service
@@ -48,6 +52,7 @@ public class MinioService {
 
     public @NotNull InputStream download(final @NotBlank String objectName) {
         try {
+            // Fetch object stream from MinIO bucket
             return client.getObject(
                     GetObjectArgs.builder()
                             .bucket(properties.getBucketName())
@@ -61,6 +66,7 @@ public class MinioService {
 
     public void delete(final @NotBlank String objectName) {
         try {
+            // Remove physical object from MinIO bucket
             client.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(properties.getBucketName())
@@ -69,6 +75,22 @@ public class MinioService {
             );
         } catch (final Exception e) {
             throw new FileStorageException("Error deleting file from MinIO: " + objectName, e);
+        }
+    }
+
+    public @NotBlank String getPresignedUrl(final @NotBlank String objectName) {
+        try {
+            // Generate temporary presigned download link (expires in 2 hours)
+            return client.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(properties.getBucketName())
+                            .object(objectName)
+                            .expiry(2, TimeUnit.HOURS)
+                            .build()
+            );
+        } catch (final Exception e) {
+            throw new FileStorageException("Error generating presigned URL for: " + objectName, e);
         }
     }
 }

@@ -258,7 +258,40 @@ public class FileController {
         log.info("[CorrelationId: {}] Initiating file update for ID: {}. New filename: {}", MDC.get("correlationId"), id, file.getOriginalFilename());
         return this.storageService.updateFile(id, file);
     }
+
+    @GetMapping("/{id}/presigned")
+    @Operation(
+            summary = "Get presigned download URL",
+            description = "Generates a temporary (2 hours) URL to download the file directly from MinIO",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Presigned URL generated successfully",
+                            content = @Content(schema = @Schema(implementation = String.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "File not found",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error occurred",
+                            content = @Content
+                    )
+            }
+    )
+    public @NotNull ResponseEntity<String> getPresignedUrl(
+            @Parameter(
+                    description = "ID of the file",
+                    required = true)
+            @PathVariable(name = "id") final @NotNull Long id
+    ) {
+        log.info("[CorrelationId: {}] Generating presigned URL for ID: {}", MDC.get("correlationId"), id);
+        return ResponseEntity.ok(this.storageService.getPresignedUrl(id));
+    }
 }
+
 
 
 
