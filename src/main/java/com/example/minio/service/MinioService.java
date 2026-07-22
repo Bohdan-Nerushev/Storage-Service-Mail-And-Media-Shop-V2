@@ -13,9 +13,17 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.RemoveBucketArgs;
+import io.minio.ListObjectsArgs;
+import io.minio.Result;
+import io.minio.messages.Item;
+import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.Http.Method;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import java.io.InputStream;
 
@@ -91,6 +99,74 @@ public class MinioService {
             );
         } catch (final Exception e) {
             throw new FileStorageException("Error generating presigned URL for: " + objectName, e);
+        }
+    }
+
+    public boolean bucketExists(final @NotBlank String bucketName) {
+        try {
+            // Check if bucket exists in MinIO
+            return client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        } catch (final Exception e) {
+            throw new FileStorageException("Error checking bucket existence: " + bucketName, e);
+        }
+    }
+
+    public void createBucket(final @NotBlank String bucketName) {
+        try {
+            // Create a new bucket in MinIO
+            client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        } catch (final Exception e) {
+            throw new FileStorageException("Error creating bucket: " + bucketName, e);
+        }
+    }
+
+    public @NotNull List<ListAllMyBucketsResult.Bucket> listBuckets() {
+        try {
+            // Retrieve list of all buckets from MinIO
+            return client.listBuckets();
+        } catch (final Exception e) {
+            throw new FileStorageException("Error listing buckets", e);
+        }
+    }
+
+    public boolean isBucketEmpty(final @NotBlank String bucketName) {
+        try {
+            // List objects to check if bucket has any items
+            final Iterable<Result<Item>> results = client.listObjects(
+                    ListObjectsArgs.builder().bucket(bucketName).build()
+            );
+            return !results.iterator().hasNext();
+        } catch (final Exception e) {
+            throw new FileStorageException("Error checking if bucket is empty: " + bucketName, e);
+        }
+    }
+
+    public void clearBucket(final @NotBlank String bucketName) {
+        try {
+            // List and delete all objects in the bucket
+            final Iterable<Result<Item>> results = client.listObjects(
+                    ListObjectsArgs.builder().bucket(bucketName).build()
+            );
+            for (final Result<Item> result : results) {
+                final Item item = result.get();
+                client.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(item.objectName())
+                                .build()
+                );
+            }
+        } catch (final Exception e) {
+            throw new FileStorageException("Error clearing objects from bucket: " + bucketName, e);
+        }
+    }
+
+    public void deleteBucket(final @NotBlank String bucketName) {
+        try {
+            // Delete bucket from MinIO
+            client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        } catch (final Exception e) {
+            throw new FileStorageException("Error deleting bucket: " + bucketName, e);
         }
     }
 }
