@@ -158,6 +158,31 @@ public class FileController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{id}/metadata")
+    @Operation(
+            summary = "Get file metadata",
+            description = "Retrieves the metadata record of a file from the database by ID",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Metadata retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = FileMetadata.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "File not found",
+                            content = @Content
+                    )
+            }
+    )
+    public ResponseEntity<FileMetadata> getMetadata(
+            @Parameter(description = "ID of the file to retrieve metadata for", required = true)
+            @PathVariable(name = "id") final @NotNull Long id
+    ) {
+        log.info("[CorrelationId: {}] Retrieving object metadata for ID: {}", MDC.get("correlationId"), id);
+        return ResponseEntity.ok(this.storageService.getMetadata(id));
+    }
+
     @GetMapping
     @Operation(
             summary = "List all files",

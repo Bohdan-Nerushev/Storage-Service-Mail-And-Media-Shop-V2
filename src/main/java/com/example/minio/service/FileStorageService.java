@@ -70,6 +70,12 @@ public class FileStorageService {
     public @NotNull List<FileMetadata> listFiles() {
         return repository.findAll();
     }
+
+    public @NotNull FileMetadata getObjectMetadata(final @NotNull Long id){
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("File metadata not found for ID: " + id));
+    }    
+    
 }
 
 
