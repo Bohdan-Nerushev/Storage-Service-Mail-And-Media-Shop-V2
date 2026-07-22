@@ -11,6 +11,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -56,5 +58,13 @@ public class FileStorageService {
         final FileMetadata metadata = getMetadata(id);
         return minioService.download(metadata.getObjectKey());
     }
+
+    @Transactional
+    public void deleteFile(final @NotNull Long id) {
+        final FileMetadata metadata = getMetadata(id);
+        minioService.delete(metadata.getObjectKey());
+        repository.delete(metadata);
+    }
 }
+
 

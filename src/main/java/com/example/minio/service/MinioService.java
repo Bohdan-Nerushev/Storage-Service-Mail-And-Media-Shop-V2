@@ -5,6 +5,7 @@ import com.example.minio.exception.FileStorageException;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,19 @@ public class MinioService {
             );
         } catch (final Exception e) {
             throw new FileStorageException("Error downloading file from MinIO: " + objectName, e);
+        }
+    }
+
+    public void delete(final @NotBlank String objectName) {
+        try {
+            client.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(properties.getBucketName())
+                            .object(objectName)
+                            .build()
+            );
+        } catch (final Exception e) {
+            throw new FileStorageException("Error deleting file from MinIO: " + objectName, e);
         }
     }
 }

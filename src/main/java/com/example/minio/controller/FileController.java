@@ -17,9 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import com.example.minio.entity.FileMetadata;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -124,5 +124,39 @@ public class FileController {
                 .contentType(MediaType.parseMediaType(safeContentType))
                 .body(resource);
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Delete file from storage",
+            description = "Deletes file metadata from DB and the actual object from MinIO",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "File deleted successfully",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "File not found",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error occurred",
+                            content = @Content
+                    )
+            }
+    )
+    public ResponseEntity<Void> delete(
+            @Parameter(
+                    description = "ID of the file to delete",
+                    required = true)
+            @PathVariable(name = "id") final @NotNull Long id
+    ) {
+        log.info("[CorrelationId: {}] Initiating file deletion for ID: {}", MDC.get("correlationId"), id);
+        this.storageService.deleteFile(id);
+        return ResponseEntity.noContent().build();
+    }
 }
+
 
