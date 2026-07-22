@@ -128,12 +128,7 @@ public class BucketController {
             @RequestParam(name = "force", defaultValue = "false") final boolean force
     ) {
         log.info("[CorrelationId: {}] Initiating bucket deletion: {}, force: {}", MDC.get("correlationId"), name, force);
-        try {
-            this.bucketService.deleteBucket(name, force);
-            return ResponseEntity.noContent().build();
-        } catch (final IllegalArgumentException e) {
-            log.warn("[CorrelationId: {}] Deletion failed for bucket {}: {}", MDC.get("correlationId"), name, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
+        this.bucketService.deleteBucket(name, force);
+        return ResponseEntity.noContent().build();
     }
 }
