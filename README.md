@@ -1,91 +1,91 @@
-# MinIO Attempt - Сервіс роботи з об'єктним сховищем MinIO та PostgreSQL
+# MinIO Attempt - Object Storage Service using MinIO and PostgreSQL
 
-Цей проект є Spring Boot додатком, розробленим для демонстрації роботи з об'єктним сховищем MinIO (сумісним з AWS S3 API) та реляційною базою даних PostgreSQL для збереження метаданих. Додаток підтримує динамічне створення бакетів, роботу з логічними вкладеними шляхами (папками), оновлення, видалення, генерацію підписаних посилань (Presigned URL) та централізовану обробку помилок.
-
----
-
-## Зміст
-1. [Посилання на сервіси](#посилання-на-сервіси)
-2. [Встановлення та передумови](#встановлення-та-передумови)
-3. [Інструкція по запуску](#інструкція-по-запуску)
-4. [Діагностика та вирішення проблем](#діагностика-та-вирішення-проблем)
-5. [Короткий огляд API](#короткий-огляд-api)
+This project is a Spring Boot application designed to demonstrate integration with MinIO object storage (compatible with AWS S3 API) and PostgreSQL database for metadata persistence. The application supports dynamic bucket creation, logical nested folder paths (namespaces), file update/deletion, generating presigned download URLs, and global centralized exception handling.
 
 ---
 
-## Посилання на сервіси
-
-Після успішного запуску локального середовища доступні такі посилання:
-
-* **Swagger UI (Документація API)**: [http://localhost:8090/swagger-ui/index.html](http://localhost:8090/swagger-ui/index.html)
-* **MinIO Console (Панель управління MinIO)**: [http://localhost:9001](http://localhost:9001)
-  * *Логін (Access Key)*: `admin`
-  * *Пароль (Secret Key)*: `adminpassword`
+## Table of Contents
+1. [Service Links](#service-links)
+2. [Prerequisites](#prerequisites)
+3. [Running the Application](#running-the-application)
+4. [Diagnostics & Troubleshooting](#diagnostics--troubleshooting)
+5. [API Overview](#api-overview)
 
 ---
 
-## Встановлення та передумови
+## Service Links
 
-Для запуску проекту на вашому локальному комп'ютері мають бути встановлені:
-1. **Docker** та **Docker Compose**
-2. **Java 25 SDK** (якщо планується запуск без Docker)
-3. **Apache Maven** (для збірки проекту)
+Once the local environment is successfully started, the following links are available:
+
+* **Swagger UI (API Documentation)**: [http://localhost:8090/swagger-ui/index.html](http://localhost:8090/swagger-ui/index.html)
+* **MinIO Console (Web Administration)**: [http://localhost:9001](http://localhost:9001)
+  * *Access Key (Username)*: `admin`
+  * *Secret Key (Password)*: `adminpassword`
 
 ---
 
-## Інструкція по запуску
+## Prerequisites
 
-Найпростіший спосіб запустити весь стек (додаток, базу даних Postgres та сховище MinIO) — скористатися Docker Compose:
+To run this project on your local machine, ensure you have the following installed:
+1. **Docker** and **Docker Compose**
+2. **Java 25 SDK** (if running the app locally without Docker)
+3. **Apache Maven** (for building the project)
 
-1. **Клонуйте репозиторій** та перейдіть у корінь проекту.
-2. **Запустіть контейнери в у фоновому режимі**:
+---
+
+## Running the Application
+
+The easiest way to spin up the entire stack (application, PostgreSQL database, and MinIO storage) is by using Docker Compose:
+
+1. **Clone the repository** and navigate to the project root directory.
+2. **Start the containers in detached mode**:
    ```bash
    docker compose up -d --build
    ```
-   *Це завантажить образи, скомпілює додаток всередині контейнера і запустить Postgres на порту `5432` (зовнішній `5439`), MinIO на порту `9000` (зовнішній консольний `9001`) та сам сервіс на порту `8080` (експонований назовні як `8090`).*
+   *This compiles the application, downloads required Docker images, and boots Postgres on internal port `5432` (external `5439`), MinIO on `9000` (external console `9001`), and the Java application on `8080` (exposed on the host as `8090`).*
 
-3. **Зупинка сервісів**:
+3. **Stop the services**:
    ```bash
    docker compose down -v
    ```
-   *(Прапор `-v` видалить локальні томи, очистивши базу даних та збережені файли).*
+   *(The `-v` flag deletes database volumes and stored files, starting with a clean slate next time).*
 
 ---
 
-## Діагностика та вирішення проблем
+## Diagnostics & Troubleshooting
 
-### 1. Перевірка статусу контейнерів
-Переконайтеся, що всі сервіси запущені:
+### 1. Check Container Status
+Ensure all containers are healthy and running:
 ```bash
 docker compose ps
 ```
 
-### 2. Перевірка логів додатка
-Якщо виникають помилки підключення або роботи, перегляньте логи контейнера додатку:
+### 2. View Application Logs
+To inspect application logs or connection errors:
 ```bash
 docker compose logs -f app
 ```
 
-### 3. Проблема з Presigned URL (DNS Resolution)
-* **Проблема**: Посилання, згенероване через `/api/buckets/{bucketName}/files/presigned/{*filePath}`, містить хост `http://minio:9000/` і не відкривається у браузері на комп'ютері.
-* **Причина**: Хост `minio` резолвиться тільки всередині мережі Docker.
-* **Рішення**: Додайте запис про локальне ім'я хоста у файл `/etc/hosts` вашого комп'ютера:
+### 3. Presigned URL Issue (DNS Resolution)
+* **Problem**: The presigned download URL generated by `/api/buckets/{bucketName}/files/presigned/{*filePath}` contains the host `http://minio:9000/` and fails to load in your host web browser.
+* **Reason**: The host `minio` is only resolvable inside the Docker virtual network.
+* **Solution**: Add the local mapping to your host computer's `/etc/hosts` file:
   ```text
   127.0.0.1 minio
   ```
 
 ---
 
-## Короткий огляд API
+## API Overview
 
-### Керування бакетами (`/api/buckets`)
-* `POST /api/buckets?name={bucketName}` — Створення нового бакета.
-* `GET /api/buckets` — Список наявних бакетів.
-* `DELETE /api/buckets/{name}?force=true` — Видалення бакета. Якщо `force=true`, видаляє бакет разом зі вмістом (cascade delete).
+### Bucket Management (`/api/buckets`)
+* `POST /api/buckets?name={bucketName}` — Create a new bucket.
+* `GET /api/buckets` — List all available buckets.
+* `DELETE /api/buckets/{name}?force=true` — Delete a bucket. Setting `force=true` triggers a cascade delete, removing all objects inside prior to bucket deletion.
 
-### Керування файлами (`/api/buckets/{bucketName}/files`)
-* `POST /api/buckets/{bucketName}/files/upload?path={logicalPath}` — Завантаження файлу в певний бакет за вказаним шляхом (наприклад, `path=documents/report.pdf`).
-* `GET /api/buckets/{bucketName}/files/download/{*filePath}` — Завантаження файлу за логічним шляхом.
-* `GET /api/buckets/{bucketName}/files/metadata/{*filePath}` — Отримання метаданих файлу.
-* `GET /api/buckets/{bucketName}/files/presigned/{*filePath}` — Генерація тимчасового (2 години) посилання на пряме скачування з MinIO.
-* `DELETE /api/buckets/{bucketName}/files/delete/{*filePath}` — Видалення файлу та метаданих.
+### File Management (`/api/buckets/{bucketName}/files`)
+* `POST /api/buckets/{bucketName}/files/upload?path={logicalPath}` — Upload a file to a specific bucket under a custom path (e.g. `path=documents/report.pdf`).
+* `GET /api/buckets/{bucketName}/files/download/{*filePath}` — Download a file stream by its logical path key.
+* `GET /api/buckets/{bucketName}/files/metadata/{*filePath}` — Retrieve file metadata details.
+* `GET /api/buckets/{bucketName}/files/presigned/{*filePath}` — Generate a temporary (2-hour) presigned direct download link from MinIO.
+* `DELETE /api/buckets/{bucketName}/files/delete/{*filePath}` — Delete a file and its database metadata record.
