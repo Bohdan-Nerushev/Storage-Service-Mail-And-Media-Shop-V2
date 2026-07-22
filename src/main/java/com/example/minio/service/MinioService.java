@@ -2,6 +2,7 @@ package com.example.minio.service;
 
 import com.example.minio.config.MinioProperties;
 import com.example.minio.exception.FileStorageException;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
+
+import java.io.InputStream;
 
 @Service
 @Validated
@@ -39,6 +42,19 @@ public class MinioService {
             return objectName;
         } catch (final Exception e) {
             throw new FileStorageException(e);
+        }
+    }
+
+    public @NotNull InputStream download(final @NotBlank String objectName) {
+        try {
+            return client.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(properties.getBucketName())
+                            .object(objectName)
+                            .build()
+            );
+        } catch (final Exception e) {
+            throw new FileStorageException("Error downloading file from MinIO: " + objectName, e);
         }
     }
 }

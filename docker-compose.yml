@@ -1,4 +1,23 @@
 services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: minio_attempt
+    container_name: minio_attempt
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/storage
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_URL: http://minio:9000
+    depends_on:
+      - postgres
+      - minio
+
+
   minio:
     image: minio/minio:latest
     container_name: minio

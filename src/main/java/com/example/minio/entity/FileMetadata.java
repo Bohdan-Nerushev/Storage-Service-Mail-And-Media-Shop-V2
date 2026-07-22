@@ -8,7 +8,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.lang.Nullable;
 import lombok.Data;
 
 import java.time.LocalDateTime;

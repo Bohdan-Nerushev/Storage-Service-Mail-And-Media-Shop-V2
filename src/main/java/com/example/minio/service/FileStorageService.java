@@ -4,12 +4,14 @@ import com.example.minio.config.MinioProperties;
 import com.example.minio.dto.FileResponse;
 import com.example.minio.entity.FileMetadata;
 import com.example.minio.repository.FileMetadataRepository;
+import com.example.minio.exception.ResourceNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 
+import java.io.InputStream;
 import java.util.UUID;
 
 @Service
@@ -44,4 +46,15 @@ public class FileStorageService {
 
         return new FileResponse(savedId, savedMetadata.getOriginalName());
     }
+
+    public @NotNull FileMetadata getMetadata(final @NotNull Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("File metadata not found for ID: " + id));
+    }
+
+    public @NotNull InputStream downloadFile(final @NotNull Long id) {
+        final FileMetadata metadata = getMetadata(id);
+        return minioService.download(metadata.getObjectKey());
+    }
 }
+
