@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 import java.io.InputStream;
 import java.util.List;
 
+import org.springframework.web.bind.annotation.PutMapping;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -193,7 +195,7 @@ public class FileController {
                             description = "Files list retrieved successfully",
                             content = @Content(
                                     schema = @Schema(
-                                            implementation = FileMetadata.class
+                                             implementation = FileMetadata.class
                                     )
                             )
                     ),
@@ -208,7 +210,56 @@ public class FileController {
         log.info("[CorrelationId: {}] Listing all files", MDC.get("correlationId"));
         return this.storageService.listFiles();
     }
+
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @Operation(
+            summary = "Update file by ID",
+            description = "Replaces the binary file in MinIO and updates the metadata record in PostgreSQL",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "File updated successfully",
+                            content = @Content(
+                                    schema = @Schema(
+                                             implementation = FileResponse.class
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid request payload",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "File not found",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error occurred",
+                            content = @Content
+                    )
+            }
+    )
+    public @NotNull FileResponse update(
+            @Parameter(
+                    description = "ID of the file to update",
+                    required = true)
+            @PathVariable(name = "id") final @NotNull Long id,
+            @Parameter(
+                    description = "New multipart file payload",
+                    required = true)
+            @RequestParam(name = "file") final @NotNull MultipartFile file
+    ) {
+        log.info("[CorrelationId: {}] Initiating file update for ID: {}. New filename: {}", MDC.get("correlationId"), id, file.getOriginalFilename());
+        return this.storageService.updateFile(id, file);
+    }
 }
+
 
 
 

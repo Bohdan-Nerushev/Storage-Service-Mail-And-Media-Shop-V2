@@ -75,7 +75,28 @@ public class FileStorageService {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("File metadata not found for ID: " + id));
     }    
-    
+
+    @Transactional
+    public @NotNull FileResponse updateFile(final @NotNull Long id, final @NotNull MultipartFile file) {
+        final FileMetadata metadata = getMetadata(id);
+        
+        // Delete old file from MinIO
+        minioService.delete(metadata.getObjectKey());
+        
+        // Upload new file to MinIO
+        final String originalFilename = file.getOriginalFilename();
+        final String key = (originalFilename != null ? originalFilename : "unknown") + "-" + UUID.randomUUID();
+        final String objectKey = minioService.upload(file, key);
+        
+        // Update metadata details
+        metadata.setObjectKey(objectKey);
+        metadata.setOriginalName(originalFilename != null ? originalFilename : "unknown");
+        metadata.setContentType(file.getContentType());
+        metadata.setSize(file.getSize());
+        
+        final FileMetadata updatedMetadata = repository.save(metadata);
+        return new FileResponse(updatedMetadata.getId(), updatedMetadata.getOriginalName());
+    }
 }
 
 
