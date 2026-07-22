@@ -17,19 +17,10 @@ This project is a Spring Boot application designed to demonstrate integration wi
 
 Once the local environment is successfully started, the following links are available:
 
-* **Swagger UI (API Documentation)**: [http://localhost:8090/swagger-ui/index.html](http://localhost:8090/swagger-ui/index.html)
+* **Swagger UI (API Documentation)**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 * **MinIO Console (Web Administration)**: [http://localhost:9001](http://localhost:9001)
   * *Access Key (Username)*: `admin`
   * *Secret Key (Password)*: `adminpassword`
-
----
-
-## Prerequisites
-
-To run this project on your local machine, ensure you have the following installed:
-1. **Docker** and **Docker Compose**
-2. **Java 25 SDK** (if running the app locally without Docker)
-3. **Apache Maven** (for building the project)
 
 ---
 
@@ -42,7 +33,7 @@ The easiest way to spin up the entire stack (application, PostgreSQL database, a
    ```bash
    docker compose up -d --build
    ```
-   *This compiles the application, downloads required Docker images, and boots Postgres on internal port `5432` (external `5439`), MinIO on `9000` (external console `9001`), and the Java application on `8080` (exposed on the host as `8090`).*
+   *This compiles the application, downloads required Docker images, and boots Postgres on internal port `5432` (external `5439`), MinIO on `9000` (external console `9001`), and the Java application on `8080` (exposed on the host as `8080`).*
 
 3. **Stop the services**:
    ```bash
