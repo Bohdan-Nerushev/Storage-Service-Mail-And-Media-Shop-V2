@@ -6,6 +6,7 @@ import com.example.minio.entity.FileMetadata;
 import com.example.minio.repository.FileMetadataRepository;
 import com.example.minio.exception.ResourceNotFoundException;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,17 +28,32 @@ public class FileStorageService {
     private final @NotNull MinioProperties properties;
 
     public @NotNull FileResponse upload(final @NotNull MultipartFile file) {
-        
-        // save data into MinIO
-        final String originalFilename = file.getOriginalFilename();
-        final String key = (originalFilename != null ? originalFilename : "unknown") + "-" + UUID.randomUUID();
-        final String objectKey = minioService.upload(file, key);
+        return upload(file, properties.getBucketName(), null);
+    }
 
-        // save metadata into Postgres
-        final FileMetadata metadata = new FileMetadata();
+    public @NotNull FileResponse upload(final @NotNull MultipartFile file, final @NotBlank String bucketName, final String path) {
+        if (!minioService.bucketExists(bucketName)) {
+            throw new ResourceNotFoundException("Bucket not found: " + bucketName);
+        }
+
+        final String originalFilename = file.getOriginalFilename();
+        final String resolvedPath;
+        if (path != null && !path.isBlank()) {
+            resolvedPath = path;
+        } else {
+            resolvedPath = (originalFilename != null ? originalFilename : "unknown") + "-" + UUID.randomUUID();
+        }
+
+        // save data into MinIO
+        final String objectKey = minioService.upload(file, bucketName, resolvedPath);
+
+        // save metadata into Postgres (upsert if key exists in bucket)
+        final FileMetadata metadata = repository.findByBucketNameAndObjectKey(bucketName, objectKey)
+                .orElse(new FileMetadata());
+
         metadata.setObjectKey(objectKey);
         metadata.setOriginalName(originalFilename != null ? originalFilename : "unknown");
-        metadata.setBucketName(properties.getBucketName());
+        metadata.setBucketName(bucketName);
         metadata.setContentType(file.getContentType());
         metadata.setSize(file.getSize());
         final FileMetadata savedMetadata = repository.save(metadata);
@@ -56,11 +72,24 @@ public class FileStorageService {
                 .orElseThrow(() -> new ResourceNotFoundException("File metadata not found for ID: " + id));
     }
 
+    public @NotNull FileMetadata getMetadata(final @NotBlank String bucketName, final @NotBlank String path) {
+        // Fetch metadata from database using bucket name and object key
+        return repository.findByBucketNameAndObjectKey(bucketName, path)
+                .orElseThrow(() -> new ResourceNotFoundException("File metadata not found for bucket: " + bucketName + " and path: " + path));
+    }
+
     public @NotNull InputStream downloadFile(final @NotNull Long id) {
         // Retrieve file metadata details
         final FileMetadata metadata = getMetadata(id);
         // Download binary file stream from MinIO
-        return minioService.download(metadata.getObjectKey());
+        return minioService.download(metadata.getBucketName(), metadata.getObjectKey());
+    }
+
+    public @NotNull InputStream downloadFile(final @NotBlank String bucketName, final @NotBlank String path) {
+        // Retrieve file metadata details
+        final FileMetadata metadata = getMetadata(bucketName, path);
+        // Download binary file stream from MinIO
+        return minioService.download(bucketName, metadata.getObjectKey());
     }
 
     @Transactional
@@ -68,7 +97,17 @@ public class FileStorageService {
         // Fetch file metadata details
         final FileMetadata metadata = getMetadata(id);
         // Delete physical object from MinIO
-        minioService.delete(metadata.getObjectKey());
+        minioService.delete(metadata.getBucketName(), metadata.getObjectKey());
+        // Delete metadata record from database
+        repository.delete(metadata);
+    }
+
+    @Transactional
+    public void deleteFile(final @NotBlank String bucketName, final @NotBlank String path) {
+        // Fetch file metadata details
+        final FileMetadata metadata = getMetadata(bucketName, path);
+        // Delete physical object from MinIO
+        minioService.delete(bucketName, metadata.getObjectKey());
         // Delete metadata record from database
         repository.delete(metadata);
     }
@@ -76,6 +115,14 @@ public class FileStorageService {
     public @NotNull List<FileMetadata> listFiles() {
         // Retrieve all metadata records from database
         return repository.findAll();
+    }
+
+    public @NotNull List<FileMetadata> listFiles(final @NotBlank String bucketName) {
+        if (!minioService.bucketExists(bucketName)) {
+            throw new ResourceNotFoundException("Bucket not found: " + bucketName);
+        }
+        // Retrieve metadata records for specific bucket
+        return repository.findAllByBucketName(bucketName);
     }
 
     public @NotNull FileMetadata getObjectMetadata(final @NotNull Long id){
@@ -89,15 +136,35 @@ public class FileStorageService {
         final FileMetadata metadata = getMetadata(id);
         
         // Delete old file from MinIO
-        minioService.delete(metadata.getObjectKey());
+        minioService.delete(metadata.getBucketName(), metadata.getObjectKey());
         
         // Upload new file to MinIO
         final String originalFilename = file.getOriginalFilename();
         final String key = (originalFilename != null ? originalFilename : "unknown") + "-" + UUID.randomUUID();
-        final String objectKey = minioService.upload(file, key);
+        final String objectKey = minioService.upload(file, metadata.getBucketName(), key);
         
         // Update metadata details
         metadata.setObjectKey(objectKey);
+        metadata.setOriginalName(originalFilename != null ? originalFilename : "unknown");
+        metadata.setContentType(file.getContentType());
+        metadata.setSize(file.getSize());
+        
+        final FileMetadata updatedMetadata = repository.save(metadata);
+        return new FileResponse(updatedMetadata.getId(), updatedMetadata.getOriginalName());
+    }
+
+    @Transactional
+    public @NotNull FileResponse updateFile(final @NotBlank String bucketName, final @NotBlank String path, final @NotNull MultipartFile file) {
+        final FileMetadata metadata = getMetadata(bucketName, path);
+        
+        // Delete old file from MinIO
+        minioService.delete(bucketName, metadata.getObjectKey());
+        
+        // Upload new file to MinIO (keeping the same path or generating new based on file)
+        final String originalFilename = file.getOriginalFilename();
+        final String objectKey = minioService.upload(file, bucketName, path);
+        
+        // Update metadata details
         metadata.setOriginalName(originalFilename != null ? originalFilename : "unknown");
         metadata.setContentType(file.getContentType());
         metadata.setSize(file.getSize());
@@ -110,7 +177,14 @@ public class FileStorageService {
         // Fetch file metadata details
         final FileMetadata metadata = getMetadata(id);
         // Generate temporary direct link from MinIO
-        return minioService.getPresignedUrl(metadata.getObjectKey());
+        return minioService.getPresignedUrl(metadata.getBucketName(), metadata.getObjectKey());
+    }
+
+    public @NotNull String getPresignedUrl(final @NotBlank String bucketName, final @NotBlank String path) {
+        // Fetch file metadata details
+        final FileMetadata metadata = getMetadata(bucketName, path);
+        // Generate temporary direct link from MinIO
+        return minioService.getPresignedUrl(bucketName, metadata.getObjectKey());
     }
 }
 

@@ -36,12 +36,13 @@ public class MinioService {
     private final @NotNull MinioProperties properties;
 
     public @NotBlank String upload(final @NotNull MultipartFile file, 
+                                   final @NotBlank String bucketName,
                                    final @NotBlank String objectName
                                 ) {
         try {
             final String contentType = file.getContentType();
             client.putObject(PutObjectArgs.builder()
-                    .bucket(properties.getBucketName())
+                    .bucket(bucketName)
                     .object(objectName)
                     .stream(
                             file.getInputStream(),
@@ -58,12 +59,12 @@ public class MinioService {
         }
     }
 
-    public @NotNull InputStream download(final @NotBlank String objectName) {
+    public @NotNull InputStream download(final @NotBlank String bucketName, final @NotBlank String objectName) {
         try {
             // Fetch object stream from MinIO bucket
             return client.getObject(
                     GetObjectArgs.builder()
-                            .bucket(properties.getBucketName())
+                            .bucket(bucketName)
                             .object(objectName)
                             .build()
             );
@@ -72,12 +73,12 @@ public class MinioService {
         }
     }
 
-    public void delete(final @NotBlank String objectName) {
+    public void delete(final @NotBlank String bucketName, final @NotBlank String objectName) {
         try {
             // Remove physical object from MinIO bucket
             client.removeObject(
                     RemoveObjectArgs.builder()
-                            .bucket(properties.getBucketName())
+                            .bucket(bucketName)
                             .object(objectName)
                             .build()
             );
@@ -86,13 +87,13 @@ public class MinioService {
         }
     }
 
-    public @NotBlank String getPresignedUrl(final @NotBlank String objectName) {
+    public @NotBlank String getPresignedUrl(final @NotBlank String bucketName, final @NotBlank String objectName) {
         try {
             // Generate temporary presigned download link (expires in 2 hours)
             return client.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
-                            .bucket(properties.getBucketName())
+                            .bucket(bucketName)
                             .object(objectName)
                             .expiry(2, TimeUnit.HOURS)
                             .build()
