@@ -11,8 +11,7 @@ import java.util.Optional;
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
     Optional<FileMetadata> findByBucketNameAndObjectKey(String bucketName, String objectKey);
-    
+
     List<FileMetadata> findAllByBucketName(String bucketName);
-    
-    boolean existsByBucketNameAndObjectKey(String bucketName, String objectKey);
+
 }
