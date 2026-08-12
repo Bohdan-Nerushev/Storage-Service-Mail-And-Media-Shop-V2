@@ -1,6 +1,6 @@
-# MinIO Attempt - Object Storage Service using MinIO and PostgreSQL
+# Storage Service Mail And Media Shop V2 - Object Storage Service to 	Frontend
 
-This project is a Spring Boot application designed to demonstrate integration with MinIO object storage (compatible with AWS S3 API) and PostgreSQL database for metadata persistence. The application supports dynamic bucket creation, logical nested folder paths (namespaces), file update/deletion, generating presigned download URLs, and global centralized exception handling.
+
 
 ---
 
@@ -9,7 +9,6 @@ This project is a Spring Boot application designed to demonstrate integration wi
 2. [Prerequisites](#prerequisites)
 3. [Running the Application](#running-the-application)
 4. [Diagnostics & Troubleshooting](#diagnostics--troubleshooting)
-5. [API Overview](#api-overview)
 
 ---
 
@@ -19,8 +18,6 @@ Once the local environment is successfully started, the following links are avai
 
 * **Swagger UI (API Documentation)**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 * **MinIO Console (Web Administration)**: [http://localhost:9001](http://localhost:9001)
-  * *Access Key (Username)*: `admin`
-  * *Secret Key (Password)*: `adminpassword`
 
 ---
 
@@ -64,19 +61,3 @@ docker compose logs -f app
   ```text
   127.0.0.1 minio
   ```
-
----
-
-## API Overview
-
-### Bucket Management (`/api/buckets`)
-* `POST /api/buckets?name={bucketName}` — Create a new bucket.
-* `GET /api/buckets` — List all available buckets.
-* `DELETE /api/buckets/{name}?force=true` — Delete a bucket. Setting `force=true` triggers a cascade delete, removing all objects inside prior to bucket deletion.
-
-### File Management (`/api/buckets/{bucketName}/files`)
-* `POST /api/buckets/{bucketName}/files/upload?path={logicalPath}` — Upload a file to a specific bucket under a custom path (e.g. `path=documents/report.pdf`).
-* `GET /api/buckets/{bucketName}/files/download/{*filePath}` — Download a file stream by its logical path key.
-* `GET /api/buckets/{bucketName}/files/metadata/{*filePath}` — Retrieve file metadata details.
-* `GET /api/buckets/{bucketName}/files/presigned/{*filePath}` — Generate a temporary (2-hour) presigned direct download link from MinIO.
-* `DELETE /api/buckets/{bucketName}/files/delete/{*filePath}` — Delete a file and its database metadata record.
