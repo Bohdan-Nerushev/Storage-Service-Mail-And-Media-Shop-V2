@@ -4,15 +4,6 @@
 # ==============================================================================
 set -e
 
-GITLAB_URL="${GITLAB_URL:-https://git.mam.dev}"
-PROJECT_PATH="${PROJECT_PATH:-bnerushev%2Fmail-and-media-shop-v2}"
-
-if [ -z "$GITLAB_TOKEN" ]; then
-    echo "ERROR: Please export GITLAB_TOKEN before running this script."
-    echo "Usage: GITLAB_TOKEN=your_token ./scripts/upload_gitlab_variables.sh"
-    exit 1
-fi
-
 ENV_FILE=".env"
 if [ -n "$PROJECT_ROOT" ] && [ -f "$PROJECT_ROOT/.env" ]; then
     ENV_FILE="$PROJECT_ROOT/.env"
@@ -20,6 +11,29 @@ fi
 
 if [ ! -f "$ENV_FILE" ]; then
     echo "ERROR: .env file not found ($ENV_FILE). Please create a .env file before running this script."
+    exit 1
+fi
+
+# Load configs from .env if they are not already set in environment
+if [ -z "$GITLAB_TOKEN" ]; then
+    GITLAB_TOKEN=$(grep -E "^GITLAB_TOKEN=" "$ENV_FILE" | cut -d'=' -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+fi
+
+if [ -z "$GITLAB_URL" ]; then
+    GITLAB_URL=$(grep -E "^GITLAB_URL=" "$ENV_FILE" | cut -d'=' -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+fi
+
+if [ -z "$PROJECT_PATH" ]; then
+    PROJECT_PATH=$(grep -E "^PROJECT_PATH=" "$ENV_FILE" | cut -d'=' -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+fi
+
+# Apply script-level defaults if they are still empty
+GITLAB_URL="${GITLAB_URL:-https://git.mam.dev}"
+PROJECT_PATH="${PROJECT_PATH:-bnerushev%2Fmail-and-media-shop-v2}"
+
+if [ -z "$GITLAB_TOKEN" ]; then
+    echo "ERROR: GITLAB_TOKEN is not set in environment and not found in $ENV_FILE."
+    echo "Please add GITLAB_TOKEN=your_token to your .env file or export it."
     exit 1
 fi
 
@@ -73,3 +87,4 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$ENV_FILE"
 
 echo "All variables processed successfully!"
+
