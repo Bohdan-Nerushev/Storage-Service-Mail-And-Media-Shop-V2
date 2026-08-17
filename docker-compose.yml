@@ -13,9 +13,21 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       MINIO_URL: http://minio:9000
+      KC_ISSUER_URI: ${KC_ISSUER_URI}
+      KC_JWK_SET_URI: ${KC_JWK_SET_URI:-}
+      KC_CLIENT_ID: ${KC_CLIENT_ID:-mail-and-media-shop-app}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      AVATAR_MAX_FILE_SIZE: ${AVATAR_MAX_FILE_SIZE:-5MB}
+      AVATAR_MAX_REQUEST_SIZE: ${AVATAR_MAX_REQUEST_SIZE:-5MB}
+      JDK_JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/app/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD}"
+    volumes:
+      - ../API-mail-and-media-shop-v2/certs/truststore.jks:/app/certs/truststore.jks:ro
     depends_on:
       - postgres
       - minio
+    networks:
+      - default
+      - monitoring
 
 
   minio:
@@ -25,8 +37,8 @@ services:
     command: server /data --console-address ":9001"
 
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
 
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -46,3 +58,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./storage/postgres:/var/lib/postgresql/data
+
+networks:
+  monitoring:
+    external: true
+    name: api-mail-and-media-shop-v2_monitoring

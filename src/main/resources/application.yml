@@ -1,10 +1,23 @@
 minio:
-  url: http://localhost:9000
+  url: ${MINIO_URL:http://localhost:9002}
   access-key: ${MINIO_ROOT_USER:admin}
   secret-key: ${MINIO_ROOT_PASSWORD:StrongPassword123}
   bucket-name: user-images
 
+avatar:
+  max-file-size-bytes: ${AVATAR_MAX_FILE_SIZE_BYTES:5242880}
+
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${AVATAR_MAX_FILE_SIZE:5MB}
+      max-request-size: ${AVATAR_MAX_REQUEST_SIZE:5MB}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KC_ISSUER_URI:https://localhost:8443/realms/mail-and-media-shop-realm}
+          jwk-set-uri: ${KC_JWK_SET_URI:}
   datasource:
     url: jdbc:postgresql://localhost:5432/storage
     username: ${POSTGRES_USER}
@@ -17,3 +30,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+app:
+  security:
+    audience: ${KC_CLIENT_ID:mail-and-media-shop-app}
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
