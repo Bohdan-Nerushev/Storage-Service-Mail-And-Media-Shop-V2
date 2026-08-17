@@ -41,11 +41,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Slice-equivalent test for {@link com.example.minio.controller.AvatarController}.
- *
+ * <p>
  * Spring Boot 4.x removed @WebMvcTest and @AutoConfigureMockMvc.
  * MockMvc is configured manually via MockMvcBuilders.webAppContextSetup() with
  * springSecurity() apply so that the full security filter chain is active.
- *
+ * <p>
  * Covers: authentication/authorisation enforcement, HTTP status codes, response headers,
  * and delegation to AvatarService.
  */
@@ -171,7 +171,10 @@ class AvatarControllerTest {
 
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .with(userJwt("user-sub-001")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasAvatar").value(true))
@@ -191,7 +194,10 @@ class AvatarControllerTest {
 
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .with(userJwt("user-sub-001")))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.status").value(415));
@@ -210,7 +216,10 @@ class AvatarControllerTest {
 
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .with(userJwt("user-sub-001")))
                 .andExpect(status().isPayloadTooLarge())
                 .andExpect(jsonPath("$.status").value(413));

@@ -14,7 +14,7 @@ import java.util.UUID;
 
 /**
  * Generates self-signed RS256 JWT tokens for integration tests.
- *
+ * <p>
  * The public key is exposed as a JWKS JSON that WireMock serves on the
  * Keycloak JWKS endpoint — Spring Security will fetch and cache it to verify tokens.
  */

@@ -12,14 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -29,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * End-to-end integration tests for avatar CRUD operations using real PostgreSQL and MinIO instances.
- *
+ * <p>
  * Each test method uses a unique subject to ensure isolation.
  * Naming convention: *IT.java → picked up by maven-failsafe-plugin only.
  */
@@ -60,7 +58,10 @@ class AvatarIT extends BaseIntegrationTest {
         // Upload
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasAvatar").value(true))
@@ -87,7 +88,10 @@ class AvatarIT extends BaseIntegrationTest {
         // First upload — record the initial objectKey
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(pngFile(512))
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isOk());
 
@@ -100,7 +104,10 @@ class AvatarIT extends BaseIntegrationTest {
         // Second upload
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(jpegFile(512))
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contentType").value("image/jpeg"));
@@ -118,7 +125,10 @@ class AvatarIT extends BaseIntegrationTest {
         // Upload first
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(pngFile(512))
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isOk());
 
@@ -160,7 +170,10 @@ class AvatarIT extends BaseIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.status").value(415));
@@ -185,7 +198,10 @@ class AvatarIT extends BaseIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(file)
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isPayloadTooLarge());
     }
@@ -196,7 +212,10 @@ class AvatarIT extends BaseIntegrationTest {
         // Upload and delete once
         mockMvc.perform(multipart("/api/v1/avatars/me")
                         .file(pngFile(512))
-                        .with(request -> { request.setMethod("PUT"); return request; })
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
                         .header(HttpHeaders.AUTHORIZATION, authHeader))
                 .andExpect(status().isOk());
 

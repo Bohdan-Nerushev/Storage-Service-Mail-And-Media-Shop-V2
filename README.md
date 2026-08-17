@@ -34,3 +34,156 @@ docker compose up -d --build
 ```
 
 Swagger UI is available at `http://localhost:8080/swagger-ui/index.html`; the MinIO console is available at `http://localhost:9001`.
+
+## End-to-End (E2E) Tests
+
+Complete end-to-end tests for all avatar API endpoints are provided in the `e2e_tests/` directory. These tests cover:
+
+- All 4 API endpoints (GET /me, GET /me/content, PUT /me, DELETE /me)
+- Positive scenarios (successful operations with valid data)
+- Negative scenarios (error handling for invalid inputs)
+- Authentication tests (unauthorized access)
+- Image format validation (JPEG, PNG, WebP)
+- File size validation (exceeds 5 MB limit)
+- Idempotent operations (DELETE returns 204 even if no avatar exists)
+
+### Prerequisites
+
+Before running E2E tests, ensure:
+
+1. **Storage Service is running:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+2. **Keycloak is running** with the test realm and user created.
+   
+   For independent testing without depending on the API service's Keycloak:
+   ```bash
+   cd scripts/
+   docker compose up -d --build
+   cd ..
+   ```
+   
+   This will start a separate Keycloak instance configured for E2E testing.
+
+3. **Environment variables are set:** Copy `.env.example` to `.env` and configure:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Key variables for E2E tests:
+   ```dotenv
+   # Storage Service
+   STORAGE_APP_HOST=http://localhost
+   STORAGE_APP_PORT=8080
+   
+   # Keycloak
+   KC_URL=https://localhost:8443
+   KC_REALM=mail-and-media-shop-realm
+   KC_CLIENT_ID=mail-and-media-shop-app
+   KC_CLIENT_SECRET=
+   KC_ADMIN_USER=
+   KC_ADMIN_PASS=
+   USER_EMAIL=
+   USER_PASSWORD=
+   ```
+
+### Running E2E Tests
+
+#### Linux / macOS (bash/zsh):
+
+```bash
+cd e2e_tests/
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 main.py
+deactivate
+cd ..
+```
+
+#### Windows (PowerShell):
+
+```powershell
+cd e2e_tests
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python main.py
+deactivate
+cd ..
+```
+
+### Test Coverage
+
+The E2E test suite includes **18 test scenarios**:
+
+**GET /api/v1/avatars/me** (3 tests)
+- ✓ Get avatar metadata when avatar exists
+- ✓ Get avatar metadata when no avatar exists
+- ✓ Unauthorized access (no token)
+
+**GET /api/v1/avatars/me/content** (3 tests)
+- ✓ Download avatar binary content (with cache headers)
+- ✓ 404 when avatar not found
+- ✓ Unauthorized access (no token)
+
+**PUT /api/v1/avatars/me** (7 tests)
+- ✓ Upload valid JPEG image
+- ✓ Upload valid PNG image
+- ✓ Upload valid WebP image
+- ✗ 400 when uploading empty file
+- ✗ 415 when uploading unsupported media type
+- ✗ 413 when file exceeds size limit
+- ✗ 415 when image signature is truncated/incomplete
+- ✓ Unauthorized access (no token)
+
+**DELETE /api/v1/avatars/me** (4 tests)
+- ✓ Delete existing avatar (204 No Content)
+- ✓ Delete non-existent avatar (idempotent, returns 204)
+- ✓ Unauthorized access (no token)
+
+### Test Execution Flow
+
+1. **Setup:** Clean previous test data, obtain Keycloak token
+2. **Test GET /me:** Verify behavior when no avatar exists
+3. **Test PUT /me:** Upload JPEG, PNG, WebP images; test error scenarios
+4. **Test GET /me/content:** Download avatar binary with cache headers
+5. **Test DELETE /me:** Delete avatar, verify idempotency
+6. **Cleanup:** Remove test avatar and user from Keycloak
+
+### Expected Output
+
+Successful test run will show:
+```
+[INFO] ✓ test_get_avatar_success_without_avatar passed
+[INFO] ✓ test_upload_avatar_success_jpeg passed
+[INFO] ✓ test_get_avatar_success_with_avatar passed
+[INFO] ✓ test_get_avatar_content_success passed
+...
+TEST SUMMARY
+Total Tests: 18
+✓ Passed: 18
+✗ Failed: 0
+⊝ Skipped: 0
+```
+
+### Troubleshooting
+
+**"Failed to get user token from Keycloak"**
+- Ensure Keycloak is running and accessible at `KC_URL`
+- Verify credentials (KC_ADMIN_USER, KC_ADMIN_PASS, USER_EMAIL, USER_PASSWORD)
+- Check .env file is loaded with correct values
+
+**"Connection refused" to storage service**
+- Verify storage service is running: `docker compose ps`
+- Check STORAGE_APP_HOST and STORAGE_APP_PORT in .env
+
+**"SSL certificate verification failed"**
+- Tests automatically disable SSL verification for localhost
+- For production, configure proper certificates
+
+**"Avatar file exceeds the allowed size"**
+- Verify AVATAR_MAX_FILE_SIZE is set in .env (default: 5MB)
+- Test generates files 1KB larger than limit for size validation

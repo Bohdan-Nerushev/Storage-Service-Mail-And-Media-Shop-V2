@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Verifies that {@link GlobalExceptionHandler} maps each exception type to the correct HTTP status
  * and produces a valid {@link ErrorResponse} JSON body.
- *
+ * <p>
  * Uses AvatarController as a probe endpoint; the controller itself is not under test here.
  * Spring Boot 4.x removed @AutoConfigureMockMvc — MockMvc is configured manually.
  */

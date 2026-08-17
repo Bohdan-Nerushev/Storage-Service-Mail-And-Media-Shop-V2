@@ -3,21 +3,16 @@ package com.example.minio.integration;
 import com.example.minio.integration.support.BaseIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests verifying that security rules defined in {@link com.example.minio.config.SecurityConfig}
  * are enforced correctly at the HTTP layer with a real Spring Security filter chain.
- *
+ * <p>
  * Naming convention: *IT.java → picked up by maven-failsafe-plugin, not by maven-surefire-plugin.
  */
 class SecurityIT extends BaseIntegrationTest {
