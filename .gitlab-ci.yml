@@ -40,59 +40,59 @@ e2e_test_job:
   tags:
     - maven
 
-package_job:
-  stage: package
-  dependencies:
-    - unit_test_job
-    - e2e_test_job
-  script:
-    - chmod +x scripts/4_docker-package.sh
-    - ./scripts/4_docker-package.sh
-  when: manual
-  tags:
-    - maven
-
-deploy_dev:
-  stage: deploy
-  dependencies:
-    - package_job
-  environment:
-    name: dev
-    url: https://${SSH_HOST}/dev
-  script:
-    - chmod +x scripts/5_deploy-dev.sh
-    - ./scripts/5_deploy-dev.sh
-  when: manual
-  tags:
-    - maven
-
-deploy_qa:
-  stage: deploy
-  dependencies:
-    - package_job
-  environment:
-    name: qa
-    url: https://${SSH_HOST}/qa
-  script:
-    - chmod +x scripts/6_deploy-qa.sh
-    - ./scripts/6_deploy-qa.sh
-  when: manual
-  tags:
-    - maven
-
-deploy_live:
-  stage: deploy-live
-  dependencies:
-    - package_job
-  environment:
-    name: live
-    url: https://${SSH_HOST}
-  script:
-    - chmod +x scripts/7_deploy-live.sh
-    - ./scripts/7_deploy-live.sh
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
-  when: manual
-  allow_failure: false
-  tags:
-    - maven
+#package_job:
+#  stage: package
+#  dependencies:
+#    - unit_test_job
+#    - e2e_test_job
+#  script:
+#    - chmod +x scripts/4_docker-package.sh
+#    - ./scripts/4_docker-package.sh
+#  when: manual
+#  tags:
+#    - maven
+#
+#deploy_dev:
+#  stage: deploy
+#  dependencies:
+#    - package_job
+#  environment:
+#    name: dev
+#    url: https://${SSH_HOST}/dev
+#  script:
+#    - chmod +x scripts/5_deploy-dev.sh
+#    - ./scripts/5_deploy-dev.sh
+#  when: manual
+#  tags:
+#    - maven
+#
+#deploy_qa:
+#  stage: deploy
+#  dependencies:
+#    - package_job
+#  environment:
+#    name: qa
+#    url: https://${SSH_HOST}/qa
+#  script:
+#    - chmod +x scripts/6_deploy-qa.sh
+#    - ./scripts/6_deploy-qa.sh
+#  when: manual
+#  tags:
+#    - maven
+#
+#deploy_live:
+#  stage: deploy-live
+#  dependencies:
+#    - package_job
+#  environment:
+#    name: live
+#    url: https://${SSH_HOST}
+#  script:
+#    - chmod +x scripts/7_deploy-live.sh
+#    - ./scripts/7_deploy-live.sh
+#  rules:
+#    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+#  when: manual
+#  allow_failure: false
+#  tags:
+#    - maven
