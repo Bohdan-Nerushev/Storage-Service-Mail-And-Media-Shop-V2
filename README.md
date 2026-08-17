@@ -103,18 +103,6 @@ deactivate
 cd ..
 ```
 
-#### Windows (PowerShell):
-
-```powershell
-cd e2e_tests
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python main.py
-deactivate
-cd ..
-```
-
 ### Test Coverage
 
 The E2E test suite includes **18 test scenarios**:
@@ -152,38 +140,3 @@ The E2E test suite includes **18 test scenarios**:
 4. **Test GET /me/content:** Download avatar binary with cache headers
 5. **Test DELETE /me:** Delete avatar, verify idempotency
 6. **Cleanup:** Remove test avatar and user from Keycloak
-
-### Expected Output
-
-Successful test run will show:
-```
-[INFO] ✓ test_get_avatar_success_without_avatar passed
-[INFO] ✓ test_upload_avatar_success_jpeg passed
-[INFO] ✓ test_get_avatar_success_with_avatar passed
-[INFO] ✓ test_get_avatar_content_success passed
-...
-TEST SUMMARY
-Total Tests: 18
-✓ Passed: 18
-✗ Failed: 0
-⊝ Skipped: 0
-```
-
-### Troubleshooting
-
-**"Failed to get user token from Keycloak"**
-- Ensure Keycloak is running and accessible at `KC_URL`
-- Verify credentials (KC_ADMIN_USER, KC_ADMIN_PASS, USER_EMAIL, USER_PASSWORD)
-- Check .env file is loaded with correct values
-
-**"Connection refused" to storage service**
-- Verify storage service is running: `docker compose ps`
-- Check STORAGE_APP_HOST and STORAGE_APP_PORT in .env
-
-**"SSL certificate verification failed"**
-- Tests automatically disable SSL verification for localhost
-- For production, configure proper certificates
-
-**"Avatar file exceeds the allowed size"**
-- Verify AVATAR_MAX_FILE_SIZE is set in .env (default: 5MB)
-- Test generates files 1KB larger than limit for size validation
