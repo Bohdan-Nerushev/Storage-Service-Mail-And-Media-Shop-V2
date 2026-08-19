@@ -12,6 +12,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/env_loader.sh"
 export APP_PORT=${APP_PORT:-8080}
 export APP_HOST="${APP_HOST:-http://localhost}"
 export HEALTH_ENDPOINT="$APP_HOST:$APP_PORT/actuator/health"
+export KEYCLOAK_HTTPS_PORT=8444
+export KC_URL="https://localhost:8444"
 
 log_info "Waiting for application to be healthy at $HEALTH_ENDPOINT..."
 
@@ -115,9 +117,10 @@ if [ -d "$PROJECT_ROOT/logs" ]; then
 fi
 
 #==============================================================================
-# PHASE 6:STOP THE DOCKER-COMPOSESTACK
+# PHASE 6: STOP THE DOCKER-COMPOSE STACK
 #==============================================================================
-docker compose down -v 
+docker compose -f "$PROJECT_ROOT/scripts/docker-compose.yml" down -v || true
+docker compose -f "$PROJECT_ROOT/docker-compose.yml" down -v || true
 
 
 exit $TEST_EXIT_CODE

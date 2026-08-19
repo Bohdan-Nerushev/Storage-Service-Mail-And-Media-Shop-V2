@@ -21,7 +21,7 @@ Set these variables in `.env` before running Docker Compose:
 
 ```dotenv
 KC_ISSUER_URI=https://localhost:8443/realms/mail-and-media-shop-realm
-KC_CLIENT_ID=mail-and-media-shop-app
+KC_CLIENT_ID=storage-service-app
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
@@ -81,7 +81,7 @@ Before running E2E tests, ensure:
    # Keycloak
    KC_URL=https://localhost:8443
    KC_REALM=mail-and-media-shop-realm
-   KC_CLIENT_ID=mail-and-media-shop-app
+   KC_CLIENT_ID=storage-service-app
    KC_CLIENT_SECRET=
    KC_ADMIN_USER=
    KC_ADMIN_PASS=

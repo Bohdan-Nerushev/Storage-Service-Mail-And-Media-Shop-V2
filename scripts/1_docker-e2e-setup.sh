@@ -82,6 +82,8 @@ wait_for_service_exit_zero() {
 export APP_PORT=${APP_PORT:-8080}
 export APP_HOST="${APP_HOST:-http://localhost}"
 export TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-changeit}
+export KEYCLOAK_HTTPS_PORT=8444
+export KC_URL="https://localhost:8444"
 export TRUSTSTORE_PATH="${TRUSTSTORE_PATH:-$PROJECT_ROOT/certs/truststore.jks}"
 HEALTH_ENDPOINT="$APP_HOST:$APP_PORT/actuator/health"
 
@@ -98,7 +100,7 @@ fi
 # ==============================================================================
 
 # Ensure monitoring network exists for standalone E2E testing
-export MONITORING_NETWORK_NAME="${MONITORING_NETWORK_NAME:-storage-service-mail-and-media-shop-v2_monitoring}"
+export MONITORING_NETWORK_NAME="storage-service-mail-and-media-shop-v2_monitoring"
 log_info "Ensuring monitoring network '$MONITORING_NETWORK_NAME' exists..."
 docker network inspect "$MONITORING_NETWORK_NAME" &>/dev/null || docker network create "$MONITORING_NETWORK_NAME"
 
@@ -183,7 +185,8 @@ docker compose -f "$PROJECT_ROOT/docker-compose.yml" up -d postgres minio || err
 wait_for_service_healthy "$PROJECT_ROOT/docker-compose.yml" "postgres"
 wait_for_service_healthy "$PROJECT_ROOT/docker-compose.yml" "minio"
 
-log_info "Building and starting application..."
+log_info "Building and starting application (forcing E2E Keycloak issuer port 8444)..."
+export KC_ISSUER_URI="https://localhost:8444/realms/mail-and-media-shop-realm"
 docker compose -f "$PROJECT_ROOT/docker-compose.yml" up -d --build app || error_exit "Docker Compose app start failed."
 
 # Wait for application to be healthy

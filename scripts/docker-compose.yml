@@ -84,7 +84,7 @@ services:
       KC_ADMIN_USER: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
       KC_ADMIN_PASS: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
       KC_REALM: ${KC_REALM:-mail-and-media-shop-realm}
-      KC_CLIENT_ID: ${KC_CLIENT_ID:-mail-and-media-shop-app}
+      KC_CLIENT_ID: ${KC_CLIENT_ID:-storage-service-app}
       KC_CLIENT_SECRET: ${KC_CLIENT_SECRET:-2BcfsFrhh6WWwMQMhxfyjweZuLdWmfpr}
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER:-keycloak}
       KEYCLOAK_DB_NAME: ${KEYCLOAK_DB_NAME:-keycloak}

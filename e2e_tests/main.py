@@ -61,6 +61,7 @@ from test_helpers import (
     get_user_token,
     delete_keycloak_user,
 )
+from controller.sso_end_to_end_test import test_sso_integration
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -91,10 +92,15 @@ STORAGE_APP_HOST = os.getenv("STORAGE_APP_HOST", "http://localhost").rstrip("/")
 STORAGE_APP_PORT = os.getenv("STORAGE_APP_PORT", "8080")
 STORAGE_APP_URL = f"{STORAGE_APP_HOST}:{STORAGE_APP_PORT}"
 
+# Main API configuration
+API_APP_HOST = os.getenv("API_APP_HOST", "http://localhost").rstrip("/")
+API_APP_PORT = os.getenv("API_APP_PORT", "8090")
+API_APP_URL = f"{API_APP_HOST}:{API_APP_PORT}"
+
 # Keycloak configuration
 KC_URL = os.getenv("KC_URL", "https://localhost:8443")
 KC_REALM = os.getenv("KC_REALM", "mail-and-media-shop-realm")
-KC_CLIENT_ID = os.getenv("KC_CLIENT_ID", "mail-and-media-shop-app")
+KC_CLIENT_ID = os.getenv("KC_CLIENT_ID", "storage-service-app")
 KC_CLIENT_SECRET = os.getenv("KC_CLIENT_SECRET", "2BcfsFrhh6WWwMQMhxfyjweZuLdWmfpr")
 KC_GRANT_TYPE = os.getenv("KC_GRANT_TYPE", "password")
 KC_USERNAME = os.getenv("KC_USERNAME", os.getenv("USER_EMAIL", "postman_user2@example.com"))
@@ -414,6 +420,37 @@ def main():
             logger.error(f"✗ Test error: {e}")
             test_results['failed'].append(("DELETE /me - unauthorized", str(e)))
         
+        # =========================================================================
+        # Test Group 6: SSO Integration Test
+        # =========================================================================
+        logger.info("\n" + "=" * 80)
+        logger.info("Test Group 6: SSO Integration Test (M2M / SSO)")
+        logger.info("=" * 80)
+        
+        from controller.sso_end_to_end_test import check_sso_docker_containers
+        
+        is_isolated_testing = "8444" in KC_URL
+        if is_isolated_testing or not check_sso_docker_containers():
+            logger.warning("SSO E2E TEST SKIPPED: Required Docker containers are not running or Keycloak is in isolated mode.")
+            test_results['skipped'].append("SSO / M2M Integration Test")
+        else:
+            try:
+                test_sso_integration(
+                    kc_url=KC_URL,
+                    realm=KC_REALM,
+                    client_id="mail-and-media-shop-app",
+                    client_secret=KC_CLIENT_SECRET,
+                    username=KC_USERNAME,
+                    password=KC_PASSWORD,
+                    api_url=API_APP_URL,
+                    storage_url=STORAGE_APP_URL,
+                    token_helper_fn=get_user_token
+                )
+                test_results['passed'].append("SSO / M2M Integration Test")
+            except Exception as e:
+                logger.error(f"✗ SSO Test error: {e}")
+                test_results['failed'].append(("SSO / M2M Integration Test", str(e)))
+
     except Exception as e:
         logger.error(f"Unexpected error during test execution: {e}", exc_info=True)
         return False

@@ -21,7 +21,7 @@ ADMIN_USER=${KC_ADMIN_USER:-"admin"}
 ADMIN_PASS=${KC_ADMIN_PASS:-"admin"}
 
 REALM=${KC_REALM:-"mail-and-media-shop-realm"}
-CLIENT_ID=${KC_CLIENT_ID:-"mail-and-media-shop-app"}
+CLIENT_ID=${KC_CLIENT_ID:-"storage-service-app"}
 CLIENT_SECRET=${KC_CLIENT_SECRET:-""}
 
 USER_NAME=${USER_NAME:-"postman_user2"}

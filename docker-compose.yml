@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: minio_attempt
+    image: storage-service-mail-and-media-shop-v2
     ports:
       - "8080:8080"
     environment:
@@ -14,7 +14,7 @@ services:
       MINIO_URL: http://minio:9000
       KC_ISSUER_URI: ${KC_ISSUER_URI}
       KC_JWK_SET_URI: ${KC_JWK_SET_URI:-}
-      KC_CLIENT_ID: ${KC_CLIENT_ID:-mail-and-media-shop-app}
+      KC_CLIENT_ID: ${KC_CLIENT_ID:-storage-service-app}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
       AVATAR_MAX_FILE_SIZE: ${AVATAR_MAX_FILE_SIZE:-5MB}
       AVATAR_MAX_REQUEST_SIZE: ${AVATAR_MAX_REQUEST_SIZE:-5MB}
