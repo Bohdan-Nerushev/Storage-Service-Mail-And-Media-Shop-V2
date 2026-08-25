@@ -1,0 +1,175 @@
+name: Java CI — Unit Tests & E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "bugfix/**"
+      - "init-frontend-storage"
+  pull_request:
+    branches:
+      - main
+      - "init-frontend-storage"
+
+jobs:
+  # ============================================================
+  # JOB 1: Build & Unit Tests
+  # ============================================================
+  unit-tests:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Run Maven Build & Unit/Integration Tests
+        run: mvn clean install --no-transfer-progress
+
+  # ============================================================
+  # JOB 2: E2E Tests
+  # Runs the full Docker Compose stack via existing shell scripts
+  # ============================================================
+  e2e-tests:
+    name: E2E Tests (Docker Compose Stack)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: e2e_tests/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r e2e_tests/requirements.txt
+
+      # Maven build without tests — image is needed for docker compose up --build
+      - name: Build JAR (skip tests)
+        run: mvn package -DskipTests --no-transfer-progress
+
+      - name: Write .env from GitHub Secrets
+        env:
+          KC_ISSUER_URI: ${{ secrets.KC_ISSUER_URI || 'https://localhost:8443/realms/mail-and-media-shop-realm' }}
+          KC_JWK_SET_URI: ${{ secrets.KC_JWK_SET_URI || 'https://keycloak:8443/realms/mail-and-media-shop-realm/protocol/openid-connect/certs' }}
+          KC_CLIENT_ID: ${{ secrets.KC_CLIENT_ID || 'storage-service-app' }}
+          FRONTEND_ORIGIN: ${{ secrets.FRONTEND_ORIGIN || 'http://localhost:5173' }}
+          AVATAR_MAX_FILE_SIZE: ${{ secrets.AVATAR_MAX_FILE_SIZE || '5MB' }}
+          AVATAR_MAX_REQUEST_SIZE: ${{ secrets.AVATAR_MAX_REQUEST_SIZE || '5MB' }}
+          KEYCLOAK_PORT: ${{ secrets.KEYCLOAK_PORT || '8080' }}
+          KEYCLOAK_HTTPS_PORT: ${{ secrets.KEYCLOAK_HTTPS_PORT || '8443' }}
+          KC_URL: ${{ secrets.KC_URL || 'https://localhost:8443' }}
+          KC_REALM: ${{ secrets.KC_REALM || 'mail-and-media-shop-realm' }}
+          KC_BOOTSTRAP_ADMIN_USERNAME: ${{ secrets.KC_BOOTSTRAP_ADMIN_USERNAME || 'admin' }}
+          KC_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD || 'admin' }}
+          KC_ADMIN_USER: ${{ secrets.KC_ADMIN_USER || 'admin' }}
+          KC_ADMIN_PASS: ${{ secrets.KC_ADMIN_PASS || 'admin' }}
+          KC_CLIENT_SECRET: ${{ secrets.KC_CLIENT_SECRET || '2BcfsFrhh6WWwMQMhxfyjweZuLdWmfpr' }}
+          KC_GRANT_TYPE: ${{ secrets.KC_GRANT_TYPE || 'password' }}
+          KC_USERNAME: ${{ secrets.KC_USERNAME || 'postman_user2' }}
+          KC_PASSWORD: ${{ secrets.KC_PASSWORD || 'password123' }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER || 'admin' }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD || 'StrongPassword123' }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          TRUSTSTORE_PASSWORD: ${{ secrets.TRUSTSTORE_PASSWORD || 'changeit' }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL || 'postman_user2@example.com' }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD || 'password123' }}
+          STORAGE_APP_HOST: ${{ secrets.STORAGE_APP_HOST || 'http://localhost' }}
+          STORAGE_APP_PORT: ${{ secrets.STORAGE_APP_PORT || '8080' }}
+          KEYCLOAK_DB_PORT: ${{ secrets.KEYCLOAK_DB_PORT || '5437' }}
+          KEYCLOAK_DB_USER: ${{ secrets.KEYCLOAK_DB_USER || 'keycloak' }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD || 'keycloak' }}
+          KEYCLOAK_DB_NAME: ${{ secrets.KEYCLOAK_DB_NAME || 'keycloak' }}
+          KEYCLOAK_DB_IMAGE_VERSION: ${{ secrets.KEYCLOAK_DB_IMAGE_VERSION || '15-alpine' }}
+          MONITORING_NETWORK_NAME: ${{ secrets.MONITORING_NETWORK_NAME || 'api-mail-and-media-shop-v2_monitoring' }}
+        run: |
+          write_env_var() {
+            local key="$1"
+            local val="$2"
+            if [ -n "$val" ]; then
+              printf '%s=%s\n' "$key" "$val" >> .env
+            fi
+          }
+
+          : > .env
+
+          write_env_var KC_ISSUER_URI              "$KC_ISSUER_URI"
+          write_env_var KC_JWK_SET_URI             "$KC_JWK_SET_URI"
+          write_env_var KC_CLIENT_ID               "$KC_CLIENT_ID"
+          write_env_var FRONTEND_ORIGIN            "$FRONTEND_ORIGIN"
+          write_env_var AVATAR_MAX_FILE_SIZE       "$AVATAR_MAX_FILE_SIZE"
+          write_env_var AVATAR_MAX_REQUEST_SIZE    "$AVATAR_MAX_REQUEST_SIZE"
+          write_env_var KEYCLOAK_PORT              "$KEYCLOAK_PORT"
+          write_env_var KEYCLOAK_HTTPS_PORT        "$KEYCLOAK_HTTPS_PORT"
+          write_env_var KC_URL                     "$KC_URL"
+          write_env_var KC_REALM                   "$KC_REALM"
+          write_env_var KC_BOOTSTRAP_ADMIN_USERNAME "$KC_BOOTSTRAP_ADMIN_USERNAME"
+          write_env_var KC_BOOTSTRAP_ADMIN_PASSWORD "$KC_BOOTSTRAP_ADMIN_PASSWORD"
+          write_env_var KC_ADMIN_USER              "$KC_ADMIN_USER"
+          write_env_var KC_ADMIN_PASS              "$KC_ADMIN_PASS"
+          write_env_var KC_CLIENT_SECRET           "$KC_CLIENT_SECRET"
+          write_env_var KC_GRANT_TYPE              "$KC_GRANT_TYPE"
+          write_env_var KC_USERNAME                "$KC_USERNAME"
+          write_env_var KC_PASSWORD                "$KC_PASSWORD"
+          write_env_var MINIO_ROOT_USER            "$MINIO_ROOT_USER"
+          write_env_var MINIO_ROOT_PASSWORD        "$MINIO_ROOT_PASSWORD"
+          write_env_var POSTGRES_USER              "$POSTGRES_USER"
+          write_env_var POSTGRES_PASSWORD          "$POSTGRES_PASSWORD"
+          write_env_var TRUSTSTORE_PASSWORD        "$TRUSTSTORE_PASSWORD"
+          write_env_var USER_EMAIL                 "$USER_EMAIL"
+          write_env_var USER_PASSWORD              "$USER_PASSWORD"
+          write_env_var STORAGE_APP_HOST           "$STORAGE_APP_HOST"
+          write_env_var STORAGE_APP_PORT           "$STORAGE_APP_PORT"
+          write_env_var KEYCLOAK_DB_PORT           "$KEYCLOAK_DB_PORT"
+          write_env_var KEYCLOAK_DB_USER           "$KEYCLOAK_DB_USER"
+          write_env_var KEYCLOAK_DB_PASSWORD       "$KEYCLOAK_DB_PASSWORD"
+          write_env_var KEYCLOAK_DB_NAME           "$KEYCLOAK_DB_NAME"
+          write_env_var KEYCLOAK_DB_IMAGE_VERSION  "$KEYCLOAK_DB_IMAGE_VERSION"
+          write_env_var MONITORING_NETWORK_NAME    "$MONITORING_NETWORK_NAME"
+
+          echo ".env written (contents masked for security)"
+
+      - name: Run E2E Docker Compose Setup
+        run: |
+          chmod +x scripts/1_docker-e2e-setup.sh
+          ./scripts/1_docker-e2e-setup.sh
+
+      - name: Run E2E Tests
+        run: |
+          chmod +x scripts/3_e2e-test-runner.sh
+          ./scripts/3_e2e-test-runner.sh
+
+      - name: Fix log permissions for upload
+        if: always()
+        run: |
+          sudo chmod -R a+r logs/ 2>/dev/null || true
+          sudo chmod -R 777 logs/ 2>/dev/null || true
+
+      - name: Upload container & application logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-${{ github.run_number }}
+          path: logs/
+          retention-days: 7

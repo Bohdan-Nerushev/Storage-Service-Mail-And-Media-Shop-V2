@@ -4,8 +4,6 @@ import com.example.minio.config.MinioProperties;
 import com.example.minio.exception.FileStorageException;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.Http.Method;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -18,7 +16,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Validated
@@ -30,10 +27,10 @@ public class MinioService {
 
     public @NotBlank String upload(final @NotNull MultipartFile file,
                                    final @NotBlank String bucketName,
-                                   final @NotBlank String objectName
+                                   final @NotBlank String objectName,
+                                   final @NotBlank String contentType
     ) {
         try {
-            final String contentType = file.getContentType();
             client.putObject(PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(objectName)
@@ -42,7 +39,7 @@ public class MinioService {
                             file.getSize(),
                             -1L
                     )
-                    .contentType(contentType != null ? contentType : "application/octet-stream")
+                    .contentType(contentType)
                     .build()
             );
 
@@ -77,22 +74,6 @@ public class MinioService {
             );
         } catch (final Exception e) {
             throw new FileStorageException("Error deleting file from MinIO: " + objectName, e);
-        }
-    }
-
-    public @NotBlank String getPresignedUrl(final @NotBlank String bucketName, final @NotBlank String objectName) {
-        try {
-            // Generate temporary presigned download link (expires in 2 hours)
-            return client.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(2, TimeUnit.HOURS)
-                            .build()
-            );
-        } catch (final Exception e) {
-            throw new FileStorageException("Error generating presigned URL for: " + objectName, e);
         }
     }
 

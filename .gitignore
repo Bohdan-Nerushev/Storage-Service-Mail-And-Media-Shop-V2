@@ -28,3 +28,17 @@ HELP.md
 
 
 storage/
+
+certs/
+
+scripts/venv/**
+scripts/logs/**
+src/**/venv/**
+
+.m2/**  
+**/__pycache__/
+*.pyc
+
+e2e_tests/venv/**
+e2e_tests/controller/__pycache__/**
+e2e_tests/__pycache__/**

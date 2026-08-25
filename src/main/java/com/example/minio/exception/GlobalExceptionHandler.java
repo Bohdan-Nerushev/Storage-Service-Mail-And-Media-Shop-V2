@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +37,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleFileStorage(final FileStorageException ex, final HttpServletRequest request) {
         log.error("MinIO storage exception: ", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(AvatarValidationException.class)
+    public ResponseEntity<ErrorResponse> handleAvatarValidation(
+            final AvatarValidationException ex, final HttpServletRequest request) {
+        return buildResponse(ex.getStatus(), ex.getStatus().getReasonPhrase(), ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleUploadTooLarge(
+            final MaxUploadSizeExceededException ex, final HttpServletRequest request) {
+        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE, "Payload Too Large",
+                "Avatar file exceeds the allowed size.", request.getRequestURI());
+    }
+
+    @ExceptionHandler(AvatarConflictException.class)
+    public ResponseEntity<ErrorResponse> handleAvatarConflict(
+            final AvatarConflictException ex, final HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)

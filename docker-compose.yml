@@ -4,8 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: minio_attempt
-    container_name: minio_attempt
+    image: storage-service-mail-and-media-shop-v2
     ports:
       - "8080:8080"
     environment:
@@ -13,31 +12,54 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       MINIO_URL: http://minio:9000
+      KC_ISSUER_URI: ${KC_ISSUER_URI}
+      KC_JWK_SET_URI: ${KC_JWK_SET_URI:-}
+      KC_CLIENT_ID: ${KC_CLIENT_ID:-storage-service-app}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      AVATAR_MAX_FILE_SIZE: ${AVATAR_MAX_FILE_SIZE:-5MB}
+      AVATAR_MAX_REQUEST_SIZE: ${AVATAR_MAX_REQUEST_SIZE:-5MB}
+      JDK_JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/app/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD}"
+    volumes:
+      - ${TRUSTSTORE_PATH:-../API-mail-and-media-shop-v2/certs/truststore.jks}:/app/certs/truststore.jks:ro
     depends_on:
-      - postgres
-      - minio
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - default
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
 
   minio:
     image: minio/minio:latest
-    container_name: minio
 
     command: server /data --console-address ":9001"
 
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9002:9000"
+      - "9003:9001"
 
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
     volumes:
-      - ./storage/minio:/data
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres:
     image: postgres:16-alpine
-    container_name: postgres
     ports:
       - "5432:5432"
     environment:
@@ -45,4 +67,18 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./storage/postgres:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d storage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  minio-data:
+  postgres-data:
+
+networks:
+  monitoring:
+    external: true
+    name: ${MONITORING_NETWORK_NAME:-api-mail-and-media-shop-v2_monitoring}

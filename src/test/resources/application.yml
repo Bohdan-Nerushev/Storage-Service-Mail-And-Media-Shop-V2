@@ -4,7 +4,16 @@ minio:
   secret-key: password
   bucket-name: user-files
 
+avatar:
+  max-file-size-bytes: 5242880
+
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://issuer.example.test/realms/test
+          jwk-set-uri: https://issuer.example.test/keys
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
@@ -14,3 +23,8 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
+
+app:
+  security:
+    audience: mail-and-media-shop-app
+    allowed-origin: http://localhost:5173

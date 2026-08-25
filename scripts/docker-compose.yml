@@ -1,0 +1,105 @@
+services:
+  keycloak-db:
+    image: postgres:${KEYCLOAK_DB_IMAGE_VERSION:-15-alpine}
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    ports:
+      - "${KEYCLOAK_DB_PORT:-5435}:5432"
+    networks:
+      - monitoring
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+      - ./logs:/var/log/postgresql
+    command:
+      - postgres
+      - -c
+      - logging_collector=on
+      - -c
+      - log_destination=stderr
+      - -c
+      - log_directory=/var/log/postgresql
+      - -c
+      - log_filename=keycloak-db.log
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.0
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_MANAGEMENT_SCHEME: "http"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTPS_PORT: 8443
+      KC_HTTPS_CERTIFICATE_FILE: "/opt/keycloak/certs/keycloak-cert.pem"
+      KC_HTTPS_CERTIFICATE_KEY_FILE: "/opt/keycloak/certs/keycloak-key.pem"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_MANAGEMENT_HEALTH_ENABLED: "false"
+      KC_LEGACY_OBSERVABILITY_INTERFACE: "true"
+      KC_LOG: "console,file"
+      KC_LOG_FILE: "/opt/keycloak/data/log/keycloak.log"
+    ports:
+      - "${KEYCLOAK_HTTPS_PORT:-8443}:8443"
+    networks:
+      - monitoring
+    volumes:
+      - ./logs:/opt/keycloak/data/log
+      - ../certs:/opt/keycloak/certs:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "timeout 5s bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \"200 OK\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  keycloak-setup:
+    image: docker:cli
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      keycloak-db:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/scripts
+      - ../certs/keycloak-cert.pem:/certs/keycloak-cert.pem:ro
+    environment:
+      KC_URL: "https://keycloak:8443"
+      KC_ADMIN_USER: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_ADMIN_PASS: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
+      KC_REALM: ${KC_REALM:-mail-and-media-shop-realm}
+      KC_CLIENT_ID: ${KC_CLIENT_ID:-storage-service-app}
+      KC_CLIENT_SECRET: ${KC_CLIENT_SECRET:-2BcfsFrhh6WWwMQMhxfyjweZuLdWmfpr}
+      KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      KEYCLOAK_DB_NAME: ${KEYCLOAK_DB_NAME:-keycloak}
+      USER_NAME: ${USER_NAME:-postman_user2}
+      USER_EMAIL: ${USER_EMAIL:-postman2@example.com}
+      USER_PASSWORD: ${USER_PASSWORD:-password123}
+    entrypoint: >
+      sh -c " apk add --no-cache bash curl jq postgresql-client && bash /scripts/2_keycloak_api_setup.sh "
+    networks:
+      - monitoring
+
+volumes:
+  keycloak-db-data:
+
+networks:
+  monitoring:
+    external: true
+    name: ${MONITORING_NETWORK_NAME:-storage-service-mail-and-media-shop-v2_monitoring}

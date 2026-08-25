@@ -1,0 +1,37 @@
+minio:
+  url: ${MINIO_TEST_URL:http://localhost:9000}
+  access-key: ${MINIO_TEST_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_TEST_SECRET_KEY:minioadmin}
+  bucket-name: test-avatars
+
+avatar:
+  max-file-size-bytes: 5242880
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Overridden at runtime by BaseIntegrationTest via @DynamicPropertySource
+          issuer-uri: https://issuer.integration.test/realms/test
+          jwk-set-uri: https://issuer.integration.test/protocol/openid-connect/certs
+  datasource:
+    # Overridden at runtime by BaseIntegrationTest via @DynamicPropertySource
+    url: jdbc:postgresql://localhost:5432/storage_test
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+app:
+  security:
+    audience: mail-and-media-shop-app
+    allowed-origin: http://localhost:5173
