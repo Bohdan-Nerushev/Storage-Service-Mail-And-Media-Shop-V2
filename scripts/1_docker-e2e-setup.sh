@@ -31,6 +31,8 @@ wait_for_service_healthy() {
             local state=$(docker inspect --format='{{.State.Status}}' "$container_id" 2>/dev/null)
             if [ "$state" = "exited" ]; then
                 local exit_code=$(docker inspect --format='{{.State.ExitCode}}' "$container_id" 2>/dev/null)
+                log_error "Container logs for '$service_name':"
+                docker compose -f "$compose_file" logs "$service_name"
                 error_exit "❌ Service '$service_name' exited prematurely with exit code $exit_code."
             fi
         fi
@@ -38,6 +40,8 @@ wait_for_service_healthy() {
         local current_time=$(date +%s)
         local elapsed=$((current_time - start_time))
         if [ "$elapsed" -ge "$timeout_seconds" ]; then
+            log_error "Container logs for '$service_name':"
+            docker compose -f "$compose_file" logs "$service_name"
             error_exit "Timeout waiting for service '$service_name' to become healthy."
         fi
         
@@ -163,6 +167,9 @@ if [ ! -f "$PROJECT_ROOT/certs/truststore.jks" ] || [ ! -s "$PROJECT_ROOT/certs/
       -alias keycloak \
       -file "$PROJECT_ROOT/certs/keycloak-cert.pem" || error_exit "Java truststore generation failed."
 fi
+
+chmod -R 777 "$PROJECT_ROOT/certs" 2>/dev/null || true
+
 
 
 log_info "Building and starting infrastructure containers..."
