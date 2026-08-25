@@ -6,9 +6,11 @@ on:
       - main
       - "feature/**"
       - "bugfix/**"
+      - "init-frontend-storage"
   pull_request:
     branches:
       - main
+      - "init-frontend-storage"
 
 jobs:
   # ============================================================
