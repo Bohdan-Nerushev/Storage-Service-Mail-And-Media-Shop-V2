@@ -70,39 +70,39 @@ jobs:
 
       - name: Write .env from GitHub Secrets
         env:
-          KC_ISSUER_URI: ${{ secrets.KC_ISSUER_URI || 'https://localhost:8443/realms/mail-and-media-shop-realm' }}
-          KC_JWK_SET_URI: ${{ secrets.KC_JWK_SET_URI || 'https://keycloak:8443/realms/mail-and-media-shop-realm/protocol/openid-connect/certs' }}
-          KC_CLIENT_ID: ${{ secrets.KC_CLIENT_ID || 'storage-service-app' }}
-          FRONTEND_ORIGIN: ${{ secrets.FRONTEND_ORIGIN || 'http://localhost:5173' }}
-          AVATAR_MAX_FILE_SIZE: ${{ secrets.AVATAR_MAX_FILE_SIZE || '5MB' }}
-          AVATAR_MAX_REQUEST_SIZE: ${{ secrets.AVATAR_MAX_REQUEST_SIZE || '5MB' }}
-          KEYCLOAK_PORT: ${{ secrets.KEYCLOAK_PORT || '8080' }}
-          KEYCLOAK_HTTPS_PORT: ${{ secrets.KEYCLOAK_HTTPS_PORT || '8443' }}
-          KC_URL: ${{ secrets.KC_URL || 'https://localhost:8443' }}
-          KC_REALM: ${{ secrets.KC_REALM || 'mail-and-media-shop-realm' }}
-          KC_BOOTSTRAP_ADMIN_USERNAME: ${{ secrets.KC_BOOTSTRAP_ADMIN_USERNAME || 'admin' }}
-          KC_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD || 'admin' }}
-          KC_ADMIN_USER: ${{ secrets.KC_ADMIN_USER || 'admin' }}
-          KC_ADMIN_PASS: ${{ secrets.KC_ADMIN_PASS || 'admin' }}
-          KC_CLIENT_SECRET: ${{ secrets.KC_CLIENT_SECRET || '2BcfsFrhh6WWwMQMhxfyjweZuLdWmfpr' }}
-          KC_GRANT_TYPE: ${{ secrets.KC_GRANT_TYPE || 'password' }}
-          KC_USERNAME: ${{ secrets.KC_USERNAME || 'postman_user2' }}
-          KC_PASSWORD: ${{ secrets.KC_PASSWORD || 'password123' }}
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER || 'admin' }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD || 'StrongPassword123' }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
-          TRUSTSTORE_PASSWORD: ${{ secrets.TRUSTSTORE_PASSWORD || 'changeit' }}
-          USER_EMAIL: ${{ secrets.USER_EMAIL || 'postman_user2@example.com' }}
-          USER_PASSWORD: ${{ secrets.USER_PASSWORD || 'password123' }}
-          STORAGE_APP_HOST: ${{ secrets.STORAGE_APP_HOST || 'http://localhost' }}
-          STORAGE_APP_PORT: ${{ secrets.STORAGE_APP_PORT || '8080' }}
-          KEYCLOAK_DB_PORT: ${{ secrets.KEYCLOAK_DB_PORT || '5437' }}
-          KEYCLOAK_DB_USER: ${{ secrets.KEYCLOAK_DB_USER || 'keycloak' }}
-          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD || 'keycloak' }}
-          KEYCLOAK_DB_NAME: ${{ secrets.KEYCLOAK_DB_NAME || 'keycloak' }}
-          KEYCLOAK_DB_IMAGE_VERSION: ${{ secrets.KEYCLOAK_DB_IMAGE_VERSION || '15-alpine' }}
-          MONITORING_NETWORK_NAME: ${{ secrets.MONITORING_NETWORK_NAME || 'api-mail-and-media-shop-v2_monitoring' }}
+          KC_ISSUER_URI: ${{ secrets.KC_ISSUER_URI }}
+          KC_JWK_SET_URI: ${{ secrets.KC_JWK_SET_URI }}
+          KC_CLIENT_ID: ${{ secrets.KC_CLIENT_ID }}
+          FRONTEND_ORIGIN: ${{ secrets.FRONTEND_ORIGIN }}
+          AVATAR_MAX_FILE_SIZE: ${{ secrets.AVATAR_MAX_FILE_SIZE }}
+          AVATAR_MAX_REQUEST_SIZE: ${{ secrets.AVATAR_MAX_REQUEST_SIZE }}
+          KEYCLOAK_PORT: ${{ secrets.KEYCLOAK_PORT }}
+          KEYCLOAK_HTTPS_PORT: ${{ secrets.KEYCLOAK_HTTPS_PORT }}
+          KC_URL: ${{ secrets.KC_URL }}
+          KC_REALM: ${{ secrets.KC_REALM }}
+          KC_BOOTSTRAP_ADMIN_USERNAME: ${{ secrets.KC_BOOTSTRAP_ADMIN_USERNAME }}
+          KC_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD }}
+          KC_ADMIN_USER: ${{ secrets.KC_ADMIN_USER }}
+          KC_ADMIN_PASS: ${{ secrets.KC_ADMIN_PASS }}
+          KC_CLIENT_SECRET: ${{ secrets.KC_CLIENT_SECRET }}
+          KC_GRANT_TYPE: ${{ secrets.KC_GRANT_TYPE }}
+          KC_USERNAME: ${{ secrets.KC_USERNAME }}
+          KC_PASSWORD: ${{ secrets.KC_PASSWORD }}
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          TRUSTSTORE_PASSWORD: ${{ secrets.TRUSTSTORE_PASSWORD }}
+          USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+          STORAGE_APP_HOST: ${{ secrets.STORAGE_APP_HOST }}
+          STORAGE_APP_PORT: ${{ secrets.STORAGE_APP_PORT }}
+          KEYCLOAK_DB_PORT: ${{ secrets.KEYCLOAK_DB_PORT }}
+          KEYCLOAK_DB_USER: ${{ secrets.KEYCLOAK_DB_USER }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+          KEYCLOAK_DB_NAME: ${{ secrets.KEYCLOAK_DB_NAME }}
+          KEYCLOAK_DB_IMAGE_VERSION: ${{ secrets.KEYCLOAK_DB_IMAGE_VERSION }}
+          MONITORING_NETWORK_NAME: ${{ secrets.MONITORING_NETWORK_NAME }}
         run: |
           write_env_var() {
             local key="$1"
