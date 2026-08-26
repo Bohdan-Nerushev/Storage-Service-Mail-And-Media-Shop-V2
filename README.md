@@ -140,3 +140,59 @@ The E2E test suite includes **18 test scenarios**:
 4. **Test GET /me/content:** Download avatar binary with cache headers
 5. **Test DELETE /me:** Delete avatar, verify idempotency
 6. **Cleanup:** Remove test avatar and user from Keycloak
+
+---
+
+## GitLab CI/CD Variables Automation
+
+The project includes an automated script [`scripts/upload_gitlab_variables.sh`](file:///home/bnerushev/Schreibtisch/Project/ALL-mail-and-media-shop-v2/storage-service-mail-and-media-shop-v2/scripts/upload_gitlab_variables.sh) to sync environment variables from your local `.env` file directly to GitLab CI/CD Variables via the GitLab REST API (`https://git.mam.dev/api/v4/projects`).
+
+### Prerequisites
+1. A valid `.env` file in the project root directory. If `.env` is missing, the script will abort with an error message:
+   ```text
+   ERROR: .env file not found (.env). Please create a .env file before running this script.
+   ```
+2. A GitLab Personal Access Token with `api` scope generated at [https://git.mam.dev/-/profile/personal_access_tokens](https://git.mam.dev/-/profile/personal_access_tokens).
+
+### Usage
+
+Run the script by providing your `GITLAB_TOKEN`:
+
+```bash
+GITLAB_TOKEN=your_personal_access_token ./scripts/upload_gitlab_variables.sh
+```
+
+### Features
+* **Dynamic `.env` Parsing**: Automatically reads all non-empty key-value pairs from `.env` (skipping comments and empty lines).
+* **Idempotent Execution**: Attempts to create each variable (`POST`). If the variable already exists in GitLab, it updates its value (`PUT`).
+* **Environment Overrides**: Supports overriding `GITLAB_URL` (default: `https://git.mam.dev`) and `PROJECT_PATH` (default: `bnerushev%2Fstorage-service-mail-and-media-shop-v2`).
+
+---
+
+## GitHub Actions Secrets Automation
+
+The project includes an automated script [`scripts/upload_github_secrets.sh`](file:///home/bnerushev/Schreibtisch/Project/ALL-mail-and-media-shop-v2/storage-service-mail-and-media-shop-v2/scripts/upload_github_secrets.sh) to upload necessary repository secrets directly to GitHub using the GitHub CLI (`gh`). By default, it loads secrets from the external `/home/bnerushev/PycharmProjects/MailServiceAPI/.env` file.
+
+### Prerequisites
+1. A valid `.env` file at `/home/bnerushev/PycharmProjects/MailServiceAPI/.env`.
+2. GitHub CLI (`gh`) installed on your system.
+3. Authenticated GitHub session (`gh auth login`).
+
+### Usage
+
+1. Check if `gh` is installed:
+   ```bash
+   gh --version
+   ```
+2. Log in to your GitHub account:
+   ```bash
+   gh auth login
+   ```
+3. Run the upload script:
+   ```bash
+   ./scripts/upload_github_secrets.sh
+   ```
+
+### Features
+* **Filtered Secret Upload**: Uploads only the allowed keys required by the workflows or MailServiceAPI, ignoring auxiliary and monitoring variables to save GitHub secrets quota.
+* **Non-empty validation**: Automatically skips empty configuration keys.
