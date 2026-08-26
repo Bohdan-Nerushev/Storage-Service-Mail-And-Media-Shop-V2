@@ -174,7 +174,7 @@ GITLAB_TOKEN=your_personal_access_token ./scripts/upload_gitlab_variables.sh
 The project includes an automated script [`scripts/upload_github_secrets.sh`](file:///home/bnerushev/Schreibtisch/Project/ALL-mail-and-media-shop-v2/storage-service-mail-and-media-shop-v2/scripts/upload_github_secrets.sh) to upload necessary repository secrets directly to GitHub using the GitHub CLI (`gh`). By default, it loads secrets from the external `/home/bnerushev/PycharmProjects/MailServiceAPI/.env` file.
 
 ### Prerequisites
-1. A valid `.env` file at `/home/bnerushev/PycharmProjects/MailServiceAPI/.env` (or override by passing the path as an argument to the script).
+1. A valid `.env` file at `/home/bnerushev/PycharmProjects/MailServiceAPI/.env`.
 2. GitHub CLI (`gh`) installed on your system.
 3. Authenticated GitHub session (`gh auth login`).
 
@@ -188,13 +188,9 @@ The project includes an automated script [`scripts/upload_github_secrets.sh`](fi
    ```bash
    gh auth login
    ```
-3. Run the upload script (defaults to `/home/bnerushev/PycharmProjects/MailServiceAPI/.env`):
+3. Run the upload script:
    ```bash
    ./scripts/upload_github_secrets.sh
-   ```
-   Or specify a custom `.env` path:
-   ```bash
-   ./scripts/upload_github_secrets.sh /path/to/custom/.env
    ```
 
 ### Features
